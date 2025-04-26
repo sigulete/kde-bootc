@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   #push:
   #schedule:
-  # Triggers Fri at 13:15
-  #- cron: '15 13 * * FRI'
+  # Triggers Fri at 13:30
+  #- cron: '30 13 * * FRI'
 
 jobs:
   io-image:
