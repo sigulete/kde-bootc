@@ -1,0 +1,9 @@
+[Unit]
+Description=Setup USERS and /VAR at boot
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/firstboot-setup
+ImportCredential=home.create.*

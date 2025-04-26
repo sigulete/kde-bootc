@@ -1,0 +1,18 @@
+name: build container -> kde-bootc
+run-name: building container -> kde-bootc
+on: 
+  workflow_dispatch:
+  #push:
+  #schedule:
+  # Triggers Fri at 13:15
+  #- cron: '15 13 * * FRI'
+
+jobs:
+  io-image:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: run podman build
+      run: podman build -t kde-bootc --disable-compression=false .
+    - name: push image to ghcr.io
+      run: podman push --creds=${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} kde-bootc ghcr.io/sigulete/kde-bootc:latest

@@ -1,0 +1,7 @@
+[Unit]
+Description=Update Toolbox container, Flatpak apps and Bootc download
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/all-system-update

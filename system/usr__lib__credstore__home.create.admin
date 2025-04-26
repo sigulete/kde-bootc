@@ -1,0 +1,27 @@
+{
+    "userName" : "admin",
+    "realName" : "Administrator",
+    "storage" : "luks",
+    "fileSystemType" : "btrfs",
+    "diskSize" : 10737418240,
+    "luksDiscard" : false,
+    "luksOfflineDiscard" : true,
+    "luksResizeMode" : "shrink-and-grow",
+    "rebalanceWeight" : false,
+    "uid" : 1000,
+    "gid" : 1000,
+    "disposition" : "regular",
+    "memberOf" : [
+        "wheel"
+    ],
+    "privileged" : {
+        "hashedPassword" : [
+            "$y$j9T$tT7wn6bcJmdHW12KcdgCo.$PM2Usi1A4CkoODrNEpMxcxAOfkB5luy7T57quOro1i8"
+        ]
+    },
+    "secret" : {
+        "password" : [
+            "Temp#Pass"
+        ]
+    }
+}

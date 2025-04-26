@@ -1,0 +1,10 @@
+#!/bin/bash
+
+USER_NAME=admin
+
+# Setup subuid & subgid for systemd-homed user
+echo "$USER_NAME:1000001:65536">/etc/subuid
+echo "$USER_NAME:1000001:65536">/etc/subgid
+
+# Setup initial password for root
+echo "Temp#Pass" | passwd root -s
