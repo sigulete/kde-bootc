@@ -1,4 +1,13 @@
 # KDE-BOOTC
+The motivation for this project is inspired from the increasing popularity of atomic distros as technology advances. The Fedora project is one of the leaders in bringing this concept to the public, with other projects following suit. This approach offers significant benefits in terms of stability and security.
+
+They apply updates as a single transaction, known as atomic upgrades, which means if an update doesn't work as expected, the system can instantly roll back to its last stable state, saving users from potential issues. The immutable nature of the system components reduces the risk of system corruption and unauthorised modifications as the core system files are read-only, making them impossible to modify.
+
+If you are planning to spin off various instances from the same image (e.g. setting up computers for members of your family or work), atomic distros provide a reliable desktop experience where every instance of the desktop is consistent with others, reducing discrepancies in software versions and behaviour.
+
+Mainstream sources like Fedora and Universal Blue offer various atomic desktops with curated configurations and package selections for the average user. But what if you're ready to take control of your desktop and customise it entirely, from packages and configurations to firewall, DNS, and update schedules?
+
+Thanks to bootc and the associated tools, building a personalised desktop experience is no longer difficult. This project aims to provide you with basic tips to help you customise your desktop. This is not a final product, but the means and steps to build your own.
 
 ## What is bootc?
 Using existing container building techniques, bootc allows you to build your own OS. Container images adhere to the OCI specification and utilise container tools for building and transporting your containers. Once installed on a node, the container functions as a regular OS.
