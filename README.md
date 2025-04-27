@@ -249,7 +249,7 @@ Once *kde-bootc* is installed, there are additional settings to improve usabilit
 The first step is to restore the SELinux context for the `systemd-homed` home directory. Without this, you may not be able to log in as `admin`. To complete this task, log in as `root`, activate `admin` home area, and then run `restorecon` to restore the SELinux context. 
 ```
 homectl activate admin
-<< enter password for admin: Temp#Pass
+<< enter password for admin: Temp#SsaP
 restorecon -R /home/admin
 homectl deactivate admin
 ```
