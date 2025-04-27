@@ -238,7 +238,7 @@ sudo podman run --rm -it --privileged --pull=newer \
 quay.io/centos-bootc/bootc-image-builder:latest \
 --type iso \
 --chown 1000:1000 \
-ghcr.io/sigulete/io
+localhost/kde-bootc
 ```
 If everything goes as planned, the ISO image will be available in the `./output` directory.
 
