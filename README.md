@@ -23,7 +23,7 @@ The filesystem structure follows ostree specifications:
 The full documentation for bootc can be found here: https://bootc-dev.github.io/bootc/
 
 ## What is kde-bootc?
-This project utilises `quay.io/fedora/fedora-bootc` as the base image to create a customizable container for building your personalised Fedora KDE immutable desktop. 
+This project utilises `quay.io/fedora/fedora-bootc` as the base image to create a customizable container for building your personalised Fedora KDE atomic desktop. 
 
 The aim is to explain basic concepts and share some useful tips. It is important to note that this template is meant to be modified according to your needs, so it is not necessarily a final product. However, it will work out of the box.
 
