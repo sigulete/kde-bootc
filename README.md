@@ -279,6 +279,6 @@ Please note that a configuration file in `/etc` drifts when it is modified local
 
 For instance, if `/etc/passwd` is locally modified, `uid` or `gid` allocations for services may not get updated, resulting in service failures. 
 
-Use `ostree admin config-diff` to list the files in your local `/etc` that are no longer managed by bootc, because they were modified or added.
+Use `ostree admin config-diff` to list the files in your local `/etc` that are no longer managed by bootc, because they are modified or added.
 
 If a particular configuration file needs to be managed by bootc, you can revert it by copying the version created by the container build from `/usr/etc` to `/etc`.
