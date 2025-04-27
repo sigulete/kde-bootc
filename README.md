@@ -243,7 +243,7 @@ localhost/kde-bootc
 If everything goes as planned, the ISO image will be available in the `./output` directory.
 
 For more information on `bootc-image-builder`, visit: https://github.com/osbuild/bootc-image-builder
-## Post installation:
+## Post installation
 Once *kde-bootc* is installed, there are additional settings to improve usability. 
 
 The first step is to restore the SELinux context for the `systemd-homed` home directory. Without this, you may not be able to log in as `admin`. To complete this task, log in as `root`, activate `admin` home area, and then run `restorecon` to restore the SELinux context. 
@@ -273,7 +273,7 @@ Finally, enable the service to keep your system updated and any other desired se
 systemctl enable --now all-system-update.timer
 systemctl enable --now tailscaled
 ```
-To pull your image from a private GitHub repository using podman, copy `/usr/lib/ostree/auth.json` to `/home/admin/.config/containers/auth.json` for user space and `/root/.config/containers/auth.json` for root. It will allow you to use `podman pull ..` and `sudo podman pull ..` respectively.
+To pull your image from a private GitHub repository using podman, copy `/usr/lib/ostree/auth.json` to `/home/admin/.config/containers/auth.json` for user space, and `/root/.config/containers/auth.json` for root. It will allow you to use `podman pull ..` and `sudo podman pull ..` respectively.
 ## Troubleshooting
 Please note that a configuration file in `/etc` drifts when it is modified locally. Consequently, bootc will no longer manage this file, and new releases won't be transferred to your installation. While this might be desired in some cases, it can also lead to issues. 
 
