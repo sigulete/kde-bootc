@@ -37,8 +37,8 @@ Each file follows a specific naming convention. For instance a file `/usr/lib/cr
 **Folders:**
 - *.github*: Contains an example of GitHub action to build the container and publish the image
 - *scripts*: Contains scripts to be ran from the Containerfile during building
-- *system*: Files to be copied to `/usr` and `/etc`
-- *systemd*: Systemd unit files to be copied to `/usr/lib/systemd`
+- *system*: Contains files to be copied to `/usr` and `/etc`
+- *systemd*: Contains systemd unit files to be copied to `/usr/lib/systemd`
 
 ## Explaining the Containerfile step by step
 ### Setup filesystem
@@ -46,12 +46,12 @@ If you plan to install software on day 2, after the *kde-bootc* installation is 
 ```
 RUN rmdir /opt && ln -s -T /var/opt /opt
 ```
-In some cases, for successful package installation the `/var/roothome` directory must exist. If this folder is missing, the container build may fail. It is advisable to create this directory before installing the packages.
+In some cases, for successful package installation the `/var/roothome` directory must exist. If this folder is missing, the container build may fail. It is advisable to create this directory before installing packages.
 ```
 RUN mkdir /var/roothome
 ```
 ### Prepare packages
-To simplify the installation of packages, I found useful keeping them as a resource under `/usr/share`. 
+To simplify the installation, and to have a track of the installed and removed packages afterwards, I found useful keeping them as a resource under `/usr/share`. 
 - All additional packages to be installed on top of *fedora-bootc* and the *KDE environment* are documented in `packages-added`. 
 - Packages to be removed from *fedora-bootc* and the *KDE environment* are documented in `packages-removed`. 
 - For convenience, the packages included in the base *fedora-bootc* are documented in `packages-fedora-bootc`.
@@ -71,7 +71,8 @@ RUN dnf -y install dnf5-plugins
 RUN dnf config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
 ```
 ### Install packages
-For clarity and task separation, I divided the installation into two steps:
+For clarity and task separation, I divided the installation into two steps.
+
 Installation of environment and groups:
 ```
 RUN dnf -y install @kde-desktop-environment
@@ -92,10 +93,10 @@ RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-removed | xargs dnf -y rem
 RUN dnf -y autoremove
 RUN dnf clean all
 ```
-The criteria used in this project is summarise below:
+The criteria used in this project is summarised below:
 - Remove packages that conflict with bootc and its immutable nature.
 - Remove packages that provide no benefit and bring unwanted dependencies, such as DNF4 and GTK3.
-- Remove packages that handle deprecated services like IPTables.
+- Remove packages that handle deprecated services.
 - Remove unnecessary packages that are resource-heavy, or bring unnecessary services.
 ### Configuration
 This section is designated for copying all necessary configuration files to `/usr` and `/etc`. As recommended by the *bootc project*, prioritise using `/usr` and use `/etc` as a fallback if needed.
@@ -110,13 +111,13 @@ COPY --chmod=0644 ./system/etc__skel__kde-bootc /etc/skel/.bashrc.d/kde-bootc
 ```
 If you're building your container image on GitHub and keeping it private, you'll need to create a **GITHUB_TOKEN** to download the image. Further information on [GitHub container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
-The **GITHUB_TOKEN** can be created from global settings (not the repository settings) under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
+A **GITHUB_TOKEN** can be created from global settings (not the repository settings) under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
 
 Using this token, create the **GITHUB_CREDENTIAL** by generating a base64 output from your **GitHub USERNAME** and **GITHUB_TOKEN** combination: 
 ```
 echo <GitHub USERNAME>:<GITHUB_TOKEN> | base64
 ```
-The output is then added to the `usr__lib__ostree__auth.json` file, which is copied to `/usr/lib/ostree/auth.json` for bootc to reference when downloading the image from the GitHub registry to update the system.
+The output must be added to `usr__lib__ostree__auth.json` file, which is copied to `/usr/lib/ostree/auth.json` for bootc to reference when downloading the image from your GitHub registry to update the system.
 ```
 COPY --chmod=0600 ./system/usr__lib__ostree__auth.json /usr/lib/ostree/auth.json
 ```
@@ -146,7 +147,7 @@ This example sets up a homed area using LUKS storage and a BTRF filesystem. I no
 - `rebalanceWeight`: Relevant only when multiple user accounts share the available storage. If `diskSize` is defined, this parameter can be set to `false`. 
 - `uid/gid`: User and Group ID. The default range for regular users is 1000-6000, and for `systemd-homed` users, it is 60001-60513. However, you can assign uid/gid for `systemd-homed` users from both ranges; in this example, they are set to `1000`.
 - `memberOf`: The groups the user belongs to. As a power user, it should be part of the `wheel` group. 
-- `hashedPassword`: This is the hashed version of the password stored under secret. Setting up an initial password allows `homectl firstboot` to create the user without prompting. This password should be changed afterwards (`homectl passwd admin`). The hash password can be created using the `mkpasswd` utility. 
+- `hashedPassword`: This is the hashed version of the password stored under secret. Setting up an initial password allows `homectl firstboot` to create the user without prompting. This password should be changed afterwards (`homectl passwd admin`). This hash can be created using `mkpasswd` utility. 
 
 The identity file is stored in one of the directories where `systemd-homed` expects to find credentials.
 ```
@@ -156,9 +157,9 @@ For more information on user records, visit: https://systemd.io/USER_RECORD/
 
 Another key parameter to set up is the range for `/etc/subuid` and `/etc/subgid` for the `admin` user. This range is necessary for running rootless containers, as each uid inside the container will be mapped to a uid outside the container within this range. When using `systemd-homed`, note that the available uid/gid ranges are predefined by systemd, and some ranges may be unavailable. Therefore, the chosen range in these files must adhere to these limitations.
 
-When running `findmnt` or `mount` command, the option `idmapped` will show for `/var/home/admin` mount point, indicating that only the available ranges are being used. 
+When running `findmnt` or `mount` command, the mount option `idmapped` will show for `/var/home/admin`, indicating that it was pre-mapped by systemd. 
 
-The available range is 524288…1879048191. In this example, I chose 1000001 to easily identify the service running in the container. For instance, if the container is running Apache with id=48, the volume or folder bound to it will have id=1000048.
+The available range is 524288…1879048191. In this example, I chose 1000001 to easily identify the service running in the container. For instance, if the container is running Apache with uid=48, the volume or folder bound to it will have uid=1000048.
 
 For more information on available ranges, visit: https://systemd.io/UIDS-GIDS/
 
@@ -171,7 +172,7 @@ RUN /tmp/scripts/config-users
 RUN /tmp/scripts/config-authselect && rm -r /tmp/scripts
 ```
 ### Systemd services
-The first service completes the configuration during machine boot, which can't be done while building the container as it requires systemd to be running.
+The first service completes the configuration during machine boot. These tasks can't be done while building the container as they require systemd to be running.
 
 It sets the hostname:
 ```
@@ -210,25 +211,24 @@ RUN bootc container lint
 ## How to create an ISO?
 Creating an ISO to install your *kde-bootc* desktop is simple. First, build the container image either on GitHub or locally. 
 
-Follow the instructions below to build the container locally, and ensure you do this as root so `bootc-image-builder` can use the image to make the ISO.
+The instructions below will build the container locally, and ensure you do this as root so `bootc-image-builder` can use the image to make the ISO.
 ```
 cd /path-to-your-repo
 sudo podman build -t kde-bootc .
 ```
-Then, outside the repository on a different directory, create a folder named `output` for the ISO image. Next, create the configuration file `config.toml` to be used by the installer.
+Then, outside the repository on a different directory, create a folder named `output` for the ISO image. Next, create the configuration file `config.toml` to be used by the installer with the following content:
 ```
-./config.toml
-
 [customizations.installer.kickstart]
 contents = "graphical"
+
 [customizations.installer.modules]
 disable = [
   "org.fedoraproject.Anaconda.Modules.Users"
 ]
 ```
-It instructs the installer to use the graphical interface and disable the module for user creation. We do not need to set up a user during installation, as this is already being taken care of.
+It instructs the installer to use a graphical interface and disable the module to create a user. We do not need to set up a user during installation, as this is already being taken care of.
 
-To run the command, ensure you are in the directory containing the `./output` directory and `./config.toml` file. `bootc-image-builder` is self-contained, with all necessary configurations and packages, and must be run as root.
+Within the directory where `./output/` and `./config.toml` exists, run `bootc-image-builder` utility which is available as a container. It must be ran as root.
 ```
 sudo podman run --rm -it --privileged --pull=newer \
 --security-opt label=type:unconfined_t \
@@ -240,7 +240,7 @@ quay.io/centos-bootc/bootc-image-builder:latest \
 --chown 1000:1000 \
 localhost/kde-bootc
 ```
-If everything goes as planned, the ISO image will be available in the `./output` directory.
+If everything goes well, the ISO image will be available in the `./output/` directory.
 
 For more information on `bootc-image-builder`, visit: https://github.com/osbuild/bootc-image-builder
 ## Post installation
@@ -268,7 +268,7 @@ Same as above, you cannot set up the avatar from Plasma's user settings, but you
 ```
 /usr/share/plasma/avatars/<avatar.png> -> /var/lib/AccountsService/icons/admin
 ```
-Finally, enable the service to keep your system updated and any other desired services: 
+Finally, enable the service to keep your system updated, and any other you may need: 
 ```
 systemctl enable --now all-system-update.timer
 systemctl enable --now tailscaled
