@@ -12,7 +12,7 @@ Thanks to bootc and the associated tools, building a personalised desktop experi
 ## What is bootc?
 Using existing container building techniques, bootc allows you to build your own OS. Container images adhere to the OCI specification and utilise container tools for building and transporting your containers. Once installed on a node, the container functions as a regular OS.
 
-The container image includes a Linux kernel (e.g., in `/usr/lib/modules`) for booting. Bootc includes a package manager, allowing you to scrutinise installed and available packages from existing and added repositories. Additionally, using `bootc usr-overlay`, bootc mounts an overlay on `/usr`, enabling temporary package installation via dnf. After testing, this overlay can be dropped at boot or manually unmounted (`mount -l /usr`). It is advisable to remove all packages installed this way before unmounting `/usr` to ensure any configuration files in `/etc` are also removed.
+The container image includes a Linux kernel (e.g., in `/usr/lib/modules`) for booting. Bootc includes a package manager, allowing you to scrutinise installed and available packages from existing and added repositories. Additionally, using `bootc usr-overlay`, bootc mounts an overlay on `/usr`, enabling temporary package installation via dnf for testing purposes.
 
 The filesystem structure follows ostree specifications:
 
@@ -277,7 +277,7 @@ To pull your image from a private GitHub repository using podman, copy `/usr/lib
 ## Troubleshooting
 Please note that a configuration file in `/etc` drifts when it is modified locally. Consequently, bootc will no longer manage this file, and new releases won't be transferred to your installation. While this might be desired in some cases, it can also lead to issues. 
 
-For instance, if `/etc/passwd` is locally modified, `uid` or `gid` allocations for services may not get updated, resulting in service failures. 
+For instance, if `/etc/passwd` is locally modified, `uid` or `gid` allocations for services may not get updated, resulting in service failures. Also, if you have installed packages using `bootc usr-overlay`, it is advisable to remove them before unmounting `/usr` to ensure any configuration files in `/etc` are also removed.
 
 Use `ostree admin config-diff` to list the files in your local `/etc` that are no longer managed by bootc, because they are modified or added.
 
