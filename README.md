@@ -1,5 +1,5 @@
 # KDE-BOOTC
-The motivation for this project is inspired from the increasing popularity of atomic distros as technology advances. The Fedora project is one of the leaders in bringing this concept to the public, with other projects following suit. This approach offers significant benefits in terms of stability and security.
+The motivation for this project is inspired by the increasing popularity of atomic distros as technology advances. The Fedora project is one of the leaders in bringing this concept to the public, with other projects following suit. This approach offers significant benefits in terms of stability and security.
 
 They apply updates as a single transaction, known as atomic upgrades, which means if an update doesn't work as expected, the system can instantly roll back to its last stable state, saving users from potential issues. The immutable nature of the system components reduces the risk of system corruption and unauthorised modifications as the core system files are read-only, making them impossible to modify.
 
