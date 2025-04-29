@@ -1,5 +1,5 @@
 [Unit]
-Description=Update Toolbox container, Flatpak apps and Bootc download daily
+Description=Fetch bootc image daily
 
 [Timer]
 OnCalendar=*-*-* 12:30:00

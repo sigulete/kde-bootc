@@ -197,10 +197,10 @@ The second service automates updates, replacing the default `bootc-fetch-apply-u
 ```
 RUN systemctl mask bootc-fetch-apply-updates.timer
 ```
-The replacement `all-system-update` service will download the image from the registry, and queue it for the next reboot. It will also update Flatpak packages and, if present, update Toolbox. It is not enabled by default and can be turned on or off by the user as needed.
+The replacement `bootc-fetch` service will download the image from the registry and queue it for the next reboot. It is not enabled by default and can be turned on or off by the user as needed.
 ```
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__all-system-update.service /usr/lib/systemd/system/all-system-update.service
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__all-system-update.timer /usr/lib/systemd/system/all-system-update.timer
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
 ```
 ### Clean and Checks
 This section focuses on cleaning the container before converting it into an image. The strategy includes using the latest `bootc container lint` option.
@@ -270,7 +270,7 @@ Same as above, you cannot set up the avatar from Plasma's user settings, but you
 ```
 Finally, enable the service to keep your system updated, and any other you may need: 
 ```
-systemctl enable --now all-system-update.timer
+systemctl enable --now bootc-fetch.timer
 systemctl enable --now tailscaled
 ```
 To pull your image from a private GitHub repository using podman, copy `/usr/lib/ostree/auth.json` to `/home/admin/.config/containers/auth.json` for user space, and `/root/.config/containers/auth.json` for root. It will allow you to use `podman pull ..` and `sudo podman pull ..` respectively.

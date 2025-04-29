@@ -37,8 +37,8 @@ RUN /tmp/scripts/config-authselect && rm -r /tmp/scripts
 
 # SYSTEMD
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__firstboot-setup.service /usr/lib/systemd/system/firstboot-setup.service
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__all-system-update.service /usr/lib/systemd/system/all-system-update.service
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__all-system-update.timer /usr/lib/systemd/system/all-system-update.timer
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
 
 RUN ln -s /usr/lib/systemd/system/firstboot-setup.service /usr/lib/systemd/system/default.target.wants/
 RUN systemctl mask bootc-fetch-apply-updates.timer

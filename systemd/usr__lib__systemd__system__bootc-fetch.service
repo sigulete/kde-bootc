@@ -1,0 +1,7 @@
+[Unit]
+Description=Fetch bootc image
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bootc update --quiet
