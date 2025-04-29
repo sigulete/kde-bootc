@@ -3,8 +3,8 @@ run-name: building container -> kde-bootc
 on: 
   workflow_dispatch:
   #push:
-  #schedule:
-    #- cron: '30 13 * * FRI'    # Triggers Fri at 13:30
+  schedule:
+  - cron: '30 13 * * FRI'    # Triggers Fri at 13:30
 
 
 jobs:
