@@ -51,7 +51,7 @@ In some cases, for successful package installation the `/var/roothome` directory
 RUN mkdir /var/roothome
 ```
 ### Prepare packages
-To simplify the installation, and to have a track of the installed and removed packages afterwards, I found useful keeping them as a resource under `/usr/share`. 
+To simplify the installation, and to have a list of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/share`. 
 - All additional packages to be installed on top of *fedora-bootc* and the *KDE environment* are documented in `packages-added`. 
 - Packages to be removed from *fedora-bootc* and the *KDE environment* are documented in `packages-removed`. 
 - For convenience, the packages included in the base *fedora-bootc* are documented in `packages-fedora-bootc`.
@@ -61,9 +61,9 @@ COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-added /usr/loc
 RUN jq -r .packages[] /usr/share/rpm-ostree/treefile.json > /usr/local/share/kde-bootc/packages-fedora-bootc
 ```
 ### Install repositories
-This section handles installing additional repositories needed before installing packages. 
+This section handles adding extra repositories needed before installing packages. 
 
-In this example, I'm including Tailscale, which is commonly used by the community, but the same principle applies to any other source you may add to your repositories. 
+In this example, I'm adding Tailscale, which is commonly used by the community, but the same principle applies to any other source you may add to your repositories. 
 
 Adding repositories uses the `config-manager` verb, available as a DNF5 plugin. This plugin is not pre-installed by default in *fedora-bootc*, so it will need to be installed beforehand.
 ```
@@ -95,7 +95,7 @@ RUN dnf clean all
 ```
 The criteria used in this project is summarised below:
 - Remove packages that conflict with bootc and its immutable nature.
-- Remove packages that provide no benefit and bring unwanted dependencies, such as DNF4 and GTK3.
+- Remove packages that bring unwanted dependencies, such as DNF4 and GTK3.
 - Remove packages that handle deprecated services.
 - Remove unnecessary packages that are resource-heavy, or bring unnecessary services.
 ### Configuration
@@ -111,7 +111,7 @@ COPY --chmod=0644 ./system/etc__skel__kde-bootc /etc/skel/.bashrc.d/kde-bootc
 ```
 If you're building your container image on GitHub and keeping it private, you'll need to create a **GITHUB_TOKEN** to download the image. Further information on [GitHub container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
-A **GITHUB_TOKEN** can be created from global settings (not the repository settings) under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
+A **GITHUB_TOKEN** can be created from global settings under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
 
 Using this token, create the **GITHUB_CREDENTIAL** by generating a base64 output from your **GitHub USERNAME** and **GITHUB_TOKEN** combination: 
 ```
