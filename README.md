@@ -17,8 +17,8 @@ The container image includes a Linux kernel (e.g., in `/usr/lib/modules`) for bo
 The filesystem structure follows ostree specifications:
 
 - The `/usr` directory is read-only, with all changes managed by the container image.
-- The `/etc` directory is editable, but any changes applied in the container will be transferred to the node unless the file was modified locally.
-- Additions to `/var` (including `/var/home`) are made during the first boot. Afterwards, `/var` remains untouched.
+- The `/etc` directory is editable, but any changes applied in the container image will be transferred to the node unless the file was modified locally.
+- Changes to `/var` (including `/var/home`) are made during the first boot. Afterwards, `/var` remains untouched.
 
 The full documentation for bootc can be found here: https://bootc-dev.github.io/bootc/
 
@@ -41,6 +41,11 @@ Each file follows a specific naming convention. For instance a file `/usr/lib/cr
 - *systemd*: Contains systemd unit files to be copied to `/usr/lib/systemd`
 
 ## Explaining the Containerfile step by step
+### Image base
+The `fedora-bootc` project is part of the Cloud Native Computing Foundation (CNCF) Sandbox projects and  generates reference "base images" of bootable containers designed for use with the bootc project. In this project, I'm using  `quay.io/fedora/fedora-bootc` as base image.
+```
+FROM quay.io/fedora/fedora-bootc
+```
 ### Setup filesystem
 If you plan to install software on day 2, after the *kde-bootc* installation is complete, you may need to link `/opt` to `/var/opt`. Otherwise, `/opt` will remain an immutable directory that can only be populated from the container build.
 ```
@@ -51,7 +56,7 @@ In some cases, for successful package installation the `/var/roothome` directory
 RUN mkdir /var/roothome
 ```
 ### Prepare packages
-To simplify the installation, and to have a list of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/share`. 
+To simplify the installation, and to have a record of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/share`. 
 - All additional packages to be installed on top of *fedora-bootc* and the *KDE environment* are documented in `packages-added`. 
 - Packages to be removed from *fedora-bootc* and the *KDE environment* are documented in `packages-removed`. 
 - For convenience, the packages included in the base *fedora-bootc* are documented in `packages-fedora-bootc`.
@@ -87,7 +92,7 @@ This is one of the key files to modify to customise your installation.
 ### Remove packages
 Some of the standard packages included in `@kde-desktop-environment` don’t behave well and sometimes conflict with an immutable desktop, so they need to be removed. 
 
-This is also an opportunity to remove software you will never use, saving resources and storage.
+This is also an opportunity to remove software you may never use, saving resources and storage.
 ```
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-removed | xargs dnf -y remove
 RUN dnf -y autoremove
@@ -97,7 +102,7 @@ The criteria used in this project is summarised below:
 - Remove packages that conflict with bootc and its immutable nature.
 - Remove packages that bring unwanted dependencies, such as DNF4 and GTK3.
 - Remove packages that handle deprecated services.
-- Remove unnecessary packages that are resource-heavy, or bring unnecessary services.
+- Remove packages that are resource-heavy, or bring unnecessary services.
 ### Configuration
 This section is designated for copying all necessary configuration files to `/usr` and `/etc`. As recommended by the *bootc project*, prioritise using `/usr` and use `/etc` as a fallback if needed.
 
