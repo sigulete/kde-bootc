@@ -1,9 +1,9 @@
 # KDE-BOOTC
 The motivation for this project is inspired by the increasing popularity of atomic distros as technology advances. The Fedora project is one of the leaders in bringing this concept to the public, with other projects following suit. This approach offers significant benefits in terms of stability and security.
 
-They apply updates as a single transaction, known as atomic upgrades, which means if an update doesn't work as expected, the system can instantly roll back to its last stable state, saving users from potential issues. The immutable nature of the system components reduces the risk of system corruption and unauthorised modifications as the core system files are read-only, making them impossible to modify.
+They apply updates as a single transaction, known as atomic upgrades, which means if an update doesn't work as expected, the system can instantly roll back to its last stable state, saving users from potential issues. The immutable nature of the filesystem components reduces the risk of system corruption and unauthorised modifications as the core system files are read-only, making them impossible to modify.
 
-If you are planning to spin off various instances from the same image (e.g. setting up computers for members of your family or work), atomic distros provide a reliable desktop experience where every instance of the desktop is consistent with others, reducing discrepancies in software versions and behaviour.
+If you are planning to spin off various instances from the same image (e.g. setting up computers for members of your family or work), atomic distros provide a reliable desktop experience where every instance of the desktop is consistent with each other, reducing discrepancies in software versions and behaviour.
 
 Mainstream sources like Fedora and Universal Blue offer various atomic desktops with curated configurations and package selections for the average user. But what if you're ready to take control of your desktop and customise it entirely, from packages and configurations to firewall, DNS, and update schedules?
 
@@ -17,8 +17,8 @@ The container image includes a Linux kernel (e.g., in `/usr/lib/modules`) for bo
 The filesystem structure follows ostree specifications:
 
 - The `/usr` directory is read-only, with all changes managed by the container image.
-- The `/etc` directory is editable, but any changes applied in the container will be transferred to the node unless the file was modified locally.
-- Additions to `/var` (including `/var/home`) are made during the first boot. Afterwards, `/var` remains untouched.
+- The `/etc` directory is editable, but any changes applied in the container image will be transferred to the node unless the file was modified locally.
+- Changes to `/var` (including `/var/home`) are made during the first boot. Afterwards, `/var` remains untouched.
 
 The full documentation for bootc can be found here: https://bootc-dev.github.io/bootc/
 
@@ -41,6 +41,11 @@ Each file follows a specific naming convention. For instance a file `/usr/lib/cr
 - *systemd*: Contains systemd unit files to be copied to `/usr/lib/systemd`
 
 ## Explaining the Containerfile step by step
+### Image base
+The `fedora-bootc` project is part of the Cloud Native Computing Foundation (CNCF) Sandbox projects and  generates reference "base images" of bootable containers designed for use with the bootc project. In this project, I'm using  `quay.io/fedora/fedora-bootc` as base image.
+```
+FROM quay.io/fedora/fedora-bootc
+```
 ### Setup filesystem
 If you plan to install software on day 2, after the *kde-bootc* installation is complete, you may need to link `/opt` to `/var/opt`. Otherwise, `/opt` will remain an immutable directory that can only be populated from the container build.
 ```
@@ -51,7 +56,7 @@ In some cases, for successful package installation the `/var/roothome` directory
 RUN mkdir /var/roothome
 ```
 ### Prepare packages
-To simplify the installation, and to have a track of the installed and removed packages afterwards, I found useful keeping them as a resource under `/usr/share`. 
+To simplify the installation, and to have a record of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/share`. 
 - All additional packages to be installed on top of *fedora-bootc* and the *KDE environment* are documented in `packages-added`. 
 - Packages to be removed from *fedora-bootc* and the *KDE environment* are documented in `packages-removed`. 
 - For convenience, the packages included in the base *fedora-bootc* are documented in `packages-fedora-bootc`.
@@ -61,9 +66,9 @@ COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-added /usr/loc
 RUN jq -r .packages[] /usr/share/rpm-ostree/treefile.json > /usr/local/share/kde-bootc/packages-fedora-bootc
 ```
 ### Install repositories
-This section handles installing additional repositories needed before installing packages. 
+This section handles adding extra repositories needed before installing packages. 
 
-In this example, I'm including Tailscale, which is commonly used by the community, but the same principle applies to any other source you may add to your repositories. 
+In this example, I'm adding Tailscale, which is commonly used by the community, but the same principle applies to any other source you may add to your repositories. 
 
 Adding repositories uses the `config-manager` verb, available as a DNF5 plugin. This plugin is not pre-installed by default in *fedora-bootc*, so it will need to be installed beforehand.
 ```
@@ -87,7 +92,7 @@ This is one of the key files to modify to customise your installation.
 ### Remove packages
 Some of the standard packages included in `@kde-desktop-environment` don’t behave well and sometimes conflict with an immutable desktop, so they need to be removed. 
 
-This is also an opportunity to remove software you will never use, saving resources and storage.
+This is also an opportunity to remove software you may never use, saving resources and storage.
 ```
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-removed | xargs dnf -y remove
 RUN dnf -y autoremove
@@ -95,9 +100,9 @@ RUN dnf clean all
 ```
 The criteria used in this project is summarised below:
 - Remove packages that conflict with bootc and its immutable nature.
-- Remove packages that provide no benefit and bring unwanted dependencies, such as DNF4 and GTK3.
+- Remove packages that bring unwanted dependencies, such as DNF4 and GTK3.
 - Remove packages that handle deprecated services.
-- Remove unnecessary packages that are resource-heavy, or bring unnecessary services.
+- Remove packages that are resource-heavy, or bring unnecessary services.
 ### Configuration
 This section is designated for copying all necessary configuration files to `/usr` and `/etc`. As recommended by the *bootc project*, prioritise using `/usr` and use `/etc` as a fallback if needed.
 
@@ -111,7 +116,7 @@ COPY --chmod=0644 ./system/etc__skel__kde-bootc /etc/skel/.bashrc.d/kde-bootc
 ```
 If you're building your container image on GitHub and keeping it private, you'll need to create a **GITHUB_TOKEN** to download the image. Further information on [GitHub container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
 
-A **GITHUB_TOKEN** can be created from global settings (not the repository settings) under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
+A **GITHUB_TOKEN** can be created from global settings under *Developer settings*. The only required scope for the token is `read:packages`, which will allow you to download your image.
 
 Using this token, create the **GITHUB_CREDENTIAL** by generating a base64 output from your **GitHub USERNAME** and **GITHUB_TOKEN** combination: 
 ```
