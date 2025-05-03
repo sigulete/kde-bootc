@@ -284,6 +284,7 @@ systemctl enable --now tailscaled
 ```
 To pull your image from a private GitHub repository using podman, copy `/usr/lib/ostree/auth.json` to `/home/admin/.config/containers/auth.json` for user space, and `/root/.config/containers/auth.json` for root. It will allow you to use `podman pull ..` and `sudo podman pull ..` respectively.
 ## Troubleshooting
+### Drifts on `/etc`
 Please note that a configuration file in `/etc` drifts when it is modified locally. Consequently, bootc will no longer manage this file, and new releases won't be transferred to your installation. While this might be desired in some cases, it can also lead to issues. 
 
 For instance, if `/etc/passwd` is locally modified, `uid` or `gid` allocations for services may not get updated, resulting in service failures. Also, if you have installed packages using `bootc usr-overlay`, it is advisable to remove them before unmounting `/usr` to ensure any configuration files in `/etc` are also removed.
@@ -291,3 +292,19 @@ For instance, if `/etc/passwd` is locally modified, `uid` or `gid` allocations f
 Use `ostree admin config-diff` to list the files in your local `/etc` that are no longer managed by bootc, because they are modified or added.
 
 If a particular configuration file needs to be managed by bootc, you can revert it by copying the version created by the container build from `/usr/etc` to `/etc`.
+### Adding packages after first installation
+The `/var` directory is populated in the container image and transferred to your OS during initial installation. Subsequent updates to the container image will not affect `/var`. This is the expected behavior of bootc and generally works fine. However, some RPM packages execute scriptlets after installation, resulting in changes to `/var` that will not be transferred to your OS.
+
+Instead of trying to identify and update the missing bits in `/var`, I found it easier to overlay `/usr` and reinstall the packages after updating and rebooting bootc.
+```
+--> Add your packages to: usr__local__share__sigulete__packages-added, update bootc and reboot
+
+# Overlay /usr
+sudo bootc usr-overlay
+
+# Reinstall the package(s), so scriptlets can run and sort out /var
+sudo dnf reinstall <packages>
+
+# Remove /usr overlay
+sudo reboot
+```
