@@ -7,3 +7,6 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/local/bin/firstboot-setup
 ImportCredential=home.create.*
+
+[Install]
+WantedBy=multi-user.target

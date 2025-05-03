@@ -40,7 +40,8 @@ COPY --chmod=0644 ./systemd/usr__lib__systemd__system__firstboot-setup.service /
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
 
-RUN ln -s /usr/lib/systemd/system/firstboot-setup.service /usr/lib/systemd/system/default.target.wants/
+RUN systemctl enable firstboot-setup.service
+RUN systemctl enable bootloader-update.service
 RUN systemctl mask bootc-fetch-apply-updates.timer
 
 # CLEAN & CHECK

@@ -196,7 +196,7 @@ firewall-cmd --add-service=kdeconnect –permanent
 The systemd unit will be placed, and enabled by default:
 ```
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__firstboot-setup.service /usr/lib/systemd/system/firstboot-setup.service
-RUN ln -s /usr/lib/systemd/system/firstboot-setup.service /usr/lib/systemd/system/default.target.wants/
+RUN systemctl enable firstboot-setup.service
 ```
 The second service automates updates, replacing the default `bootc-fetch-apply-updates` service, which would download and apply updates as soon as they are available. This approach is problematic because it causes your computer to shut down without warning, so it is better to disable by masking the timer: 
 ```
@@ -206,6 +206,10 @@ The replacement `bootc-fetch` service will download the image from the registry 
 ```
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
 COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
+```
+The systemd service in charge to update the bootloader is enabled by default. It will be triggered at boot.
+```
+RUN systemctl enable bootloader-update.service
 ```
 ### Clean and Checks
 This section focuses on cleaning the container before converting it into an image. The strategy includes using the latest `bootc container lint` option.
