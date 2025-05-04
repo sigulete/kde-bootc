@@ -4,4 +4,4 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/bootc update --quiet
+ExecStart=/usr/bin/bootc update
