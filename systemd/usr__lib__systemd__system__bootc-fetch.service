@@ -1,6 +1,6 @@
 [Unit]
 Description=Fetch bootc image
-After=network-online.target
+ConditionPathExists=/run/ostree-booted
 
 [Service]
 Type=oneshot
