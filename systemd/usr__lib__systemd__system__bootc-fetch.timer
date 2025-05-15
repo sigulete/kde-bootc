@@ -1,6 +1,7 @@
 [Unit]
 Description=Fetch bootc image daily
 ConditionPathExists=/run/ostree-booted
+After=multi-user.target
 
 [Timer]
 OnCalendar=*-*-* 12:30:00
