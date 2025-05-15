@@ -2,7 +2,15 @@
 
 USER_NAME=admin
 
-# Setup subuid & subgid for systemd-homed user
+# STANDARD USERS
+# Standard users are recorded in /etc/passwd and /etc/group
+# Creating users as part of the container build ensures these files won't drift
+#useradd -G wheel -u 1000 -K SUB_GID_MIN=1000001 -K SUB_UID_MIN=1000001 $USER_NAME
+#echo "Temp#SsaP" | passwd $USER_NAME -s
+
+# SYSTEMD-HOMED USERS
+# systemd-homed users are created by firstboot-setup during the initial boot, as they need systemd to be running
+# Setup subuid & subgid for the systemd-homed user
 echo "$USER_NAME:1000001:65536">/etc/subuid
 echo "$USER_NAME:1000001:65536">/etc/subgid
 

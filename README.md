@@ -129,9 +129,11 @@ COPY --chmod=0600 ./system/usr__lib__ostree__auth.json /usr/lib/ostree/auth.json
 ### Users
 This section is divided into two groups: one copies configuration files, and the other runs scripts to set up the system. 
 
-I opted for `systemd-homed` users because they are better suited than regular users for immutable desktops, preventing potential drift if `/etc/passwd` is modified locally. Additionally, each user home benefits from LUKS encrypted volume.
+I opted for `systemd-homed` users because they are better suited than regular users for immutable desktops, preventing potential drift if `/etc/passwd` is modified locally. Additionally, each user home benefits from LUKS encrypted volume. However, the script includes an option to create regular users as a reference, which is currently commented out.
 
 The process begins when `firstboot-setup` runs, triggered by `firstboot-setup.service` during boot. It executes `homectl firstboot`, which checks if any regular home areas exist. If none are found, it searches for service credentials starting with `home.create.` to create users at boot. 
+
+You can't create systemd-homed users during the container build, because systemd must be running.
 
 Service credentials are imported into the systemd service using the following parameter:
 ```
