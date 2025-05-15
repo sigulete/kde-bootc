@@ -133,7 +133,7 @@ I opted for `systemd-homed` users because they are better suited than regular us
 
 The process begins when `firstboot-setup` runs, triggered by `firstboot-setup.service` during boot. It executes `homectl firstboot`, which checks if any regular home areas exist. If none are found, it searches for service credentials starting with `home.create.` to create users at boot. 
 
-You can't create systemd-homed users during the container build, because systemd must be running.
+You can't create systemd-homed users in the container build, because systemd must be running.
 
 Service credentials are imported into the systemd service using the following parameter:
 ```
