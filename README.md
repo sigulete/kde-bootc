@@ -227,7 +227,7 @@ The instructions below will build the container locally, and ensure you do this 
 cd /path-to-your-repo
 sudo podman build -t kde-bootc .
 ```
-Then, outside the repository on a different directory, create a folder named `output` for the ISO image. Next, create the configuration file `config.toml` to be used by the installer with the following content:
+Then, outside the repository on a different directory, create a folder named `output` for the ISO image. Next, create the configuration file `config.toml` to be used by the installer with the content below to kick off a graphical installation:
 ```
 [customizations.installer.kickstart]
 contents = "graphical"
@@ -237,7 +237,22 @@ disable = [
   "org.fedoraproject.Anaconda.Modules.Users"
 ]
 ```
-It instructs the installer to use a graphical interface and disable the module to create a user. We do not need to set up a user during installation, as this is already being taken care of.
+If you prefer a non-interactive text installation, you may use the variation below:
+```
+[customizations.installer.kickstart]
+contents = """
+text
+clearpart --all --initlabel --disklabel=gpt
+autopart --noswap
+"""
+
+[customizations.installer.modules]
+disable = [
+  "org.fedoraproject.Anaconda.Modules.Users"
+]
+```
+The latter will setup systemd default target to `multi-user.target`, so you will need to run `systemctl set-default graphical.target` to boot into a graphical environment.
+In both configurations, the user module is disabled. We do not need to set up a user during installation, as this is already being taken care of.
 
 Within the directory where `./output/` and `./config.toml` exists, run `bootc-image-builder` utility which is available as a container. It must be ran as root.
 ```
