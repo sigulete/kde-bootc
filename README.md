@@ -16,18 +16,20 @@ The container image includes a Linux kernel (e.g., in `/usr/lib/modules`) for bo
 
 The filesystem structure follows ostree specifications:
 
-- The `/usr` directory is read-only, with all changes managed by the container image.
+- The `/usr` (as well as `/opt`) directory is read-only, with all changes managed by the container image.
 - The `/etc` directory is editable, but any changes applied in the container image will be transferred to the node unless the file was modified locally.
 - Changes to `/var` (including `/var/home`) are made during the first boot. Afterwards, `/var` remains untouched.
 
 The full documentation for bootc can be found here: https://bootc-dev.github.io/bootc/
 
 ## What is kde-bootc?
-This project utilises `quay.io/fedora/fedora-bootc` as the base image to create a customizable container for building your personalised Fedora KDE atomic desktop. 
+This project utilises `quay.io/fedora/fedora-kinoite` as the base image to create a customizable container for building your personalised Fedora KDE atomic desktop. 
 
 The aim is to explain basic concepts and share some useful tips. It is important to note that this template is meant to be modified according to your needs, so it is not necessarily a final product. However, it will work out of the box.
 
 Although it is tailored to KDE Plasma, most of the concepts and methodologies also apply to other desktop environments.
+
+(`quay.io/fedora/fedora-bootc` is the "generic" base image without any DE, `quay.io/organization/fedora` is where all their images exist)
 
 ## Repository structure
 I tried to organise the repository for easy reading and maintenance. Files are stored in functional and well-defined directories, making them easy to find and understand their purpose and where they will be placed in the container image. 
@@ -42,14 +44,15 @@ Each file follows a specific naming convention. For instance a file `/usr/lib/cr
 
 ## Explaining the Containerfile step by step
 ### Image base
-The `fedora-bootc` project is part of the Cloud Native Computing Foundation (CNCF) Sandbox projects and  generates reference "base images" of bootable containers designed for use with the bootc project. In this project, I'm using  `quay.io/fedora/fedora-bootc` as base image.
+The `fedora-bootc` project is part of the Cloud Native Computing Foundation (CNCF) Sandbox projects and  generates reference "base images" of bootable containers designed for use with the bootc project. In this project, I'm using  `quay.io/fedora/fedora-bootc` as base image. `fedora-kinoite` is based off it with KDE included.
 ```
-FROM quay.io/fedora/fedora-bootc
+FROM quay.io/fedora/fedora-kinoite
 ```
 ### Setup filesystem
-If you plan to install software on day 2, after the *kde-bootc* installation is complete, you may need to link `/opt` to `/var/opt`. Otherwise, `/opt` will remain an immutable directory that can only be populated from the container build.
+`/opt` is a directory where software is installed when it isn't cleanly organized as it should be in `/usr`. Writable files are linked to equivalents in `/var/opt`.
+In case `/opt` is linked to `/var/opt`, let us revert that.
 ```
-RUN rmdir /opt && ln -s -T /var/opt /opt
+RUN [ -d /opt ] || ( rm -f /opt; mkdir /opt )
 ```
 In some cases, for successful package installation the `/var/roothome` directory must exist. If this folder is missing, the container build may fail. It is advisable to create this directory before installing packages.
 ```
@@ -78,25 +81,23 @@ RUN dnf config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable
 ### Install packages
 For clarity and task separation, I divided the installation into two steps.
 
-Installation of environment and groups:
-```
-RUN dnf -y install @kde-desktop-environment
-```
-And the installation of all other individual packages:
+The installation of all other individual packages:
 ```
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-added | xargs dnf -y install –allowerasing
 ```
 The script will select all lines not starting with `#` to be passed as arguments to `dnf -y install`. The `--allowerasing` option is necessary for cases like installing `vim-default-editor`, which would conflict with `nano-default-editor`, removing the latter first. 
-
 This is one of the key files to modify to customise your installation.
-### Remove packages
-Some of the standard packages included in `@kde-desktop-environment` don’t behave well and sometimes conflict with an immutable desktop, so they need to be removed. 
 
-This is also an opportunity to remove software you may never use, saving resources and storage.
+AND downgrading the kernel (it simply enables kernel-install integration)
+```
+RUN dnf -y downgrade kernel
+```
+
+### Remove packages
+This is an opportunity to remove software you may never use, saving resources and storage.
 ```
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-removed | xargs dnf -y remove
-RUN dnf -y autoremove
-RUN dnf clean all
+RUN dnf -y autoremove & dnf clean all
 ```
 The criteria used in this project is summarised below:
 - Remove packages that conflict with bootc and its immutable nature.
@@ -110,7 +111,7 @@ Bash scripts that will be used by systemd services are stored in `/usr/local/bin
 ```
 COPY --chmod=0755 ./system/usr__local__bin/* /usr/local/bin/
 ```
-Custom configuration for new users' home directories will be added to `/etc/skel/`. This project adds `.bashrc.d/kde-bootc` to customise bash, and it can be tweaked as needed.
+Custom configuration for new users' home directories will be added to `/etc/skel/`. This project adds `.bashrc.d/kde-bootc` to customise bash via this containerfile, and it can be tweaked as needed.
 ```
 COPY --chmod=0644 ./system/etc__skel__kde-bootc /etc/skel/.bashrc.d/kde-bootc
 ```
@@ -314,7 +315,7 @@ The `/var` directory is populated in the container image and transferred to your
 
 Instead of trying to identify and update the missing bits in `/var`, I found it easier to overlay `/usr` and reinstall the packages after updating and rebooting bootc.
 ```
---> Add your packages to: usr__local__share__sigulete__packages-added, update bootc and reboot
+--> Add your packages to: usr__local__share__kde-bootc__packages-added, update bootc and reboot
 
 # Overlay /usr
 sudo bootc usr-overlay
