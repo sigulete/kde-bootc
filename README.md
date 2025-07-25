@@ -50,9 +50,15 @@ FROM quay.io/fedora/fedora-kinoite
 ```
 ### Setup filesystem
 `/opt` is a directory where software is installed when it isn't cleanly organized as it should be in `/usr`. Writable files are linked to equivalents in `/var/opt`.
-In case `/opt` is linked to `/var/opt`, let us revert that.
+In order to allow seamless handling of it by bootc, it's linked to `/usr/opt`.
 ```
-RUN [ -d /opt ] || ( rm -f /opt; mkdir /opt )
+RUN <<EOOPT
+mkdir /usr/opt
+[ -d /opt ] && mv /opt/* /usr/opt
+rm -f /opt
+ln -sf usr/opt /opt
+EOOPT
+
 ```
 In some cases, for successful package installation the `/var/roothome` directory must exist. If this folder is missing, the container build may fail. It is advisable to create this directory before installing packages.
 ```
