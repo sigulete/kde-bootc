@@ -3,7 +3,12 @@ MAINTAINER First Last
 
 # SETUP FILESYSTEM
 RUN mkdir /var/roothome
-RUN [ -d /opt ] || ( rm -f /opt; mkdir /opt )
+RUN <<EOOPT
+mkdir /usr/opt
+[ -d /opt ] && mv /opt/* /usr/opt
+rm -f /opt
+ln -sf usr/opt /opt
+EOOPT
 
 # PREPARE PACKAGES
 COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-removed /usr/local/share/kde-bootc/packages-removed
