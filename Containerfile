@@ -1,9 +1,9 @@
-FROM quay.io/fedora/fedora-bootc:42
+FROM quay.io/fedora/fedora-kinoite:42
 MAINTAINER First Last
 
 # SETUP FILESYSTEM
-RUN rmdir /opt && ln -s -T /var/opt /opt
 RUN mkdir /var/roothome
+RUN [ -d /opt ] || ( rm -f /opt; mkdir /opt )
 
 # PREPARE PACKAGES
 COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-removed /usr/local/share/kde-bootc/packages-removed
@@ -15,13 +15,15 @@ RUN dnf -y install dnf5-plugins
 RUN dnf config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo 
 
 # INSTALL PACKAGES
-RUN dnf -y install @kde-desktop-environment
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-added | xargs dnf -y install --allowerasing
+
+# ENABLE kernel-install INTEGRATION
+RUN dnf -y downgrade kernel
+# cf. https://docs.fedoraproject.org/en-US/bootc/building-containers/#_kernel_management
 
 # REMOVE PACKAGES
 RUN grep -vE '^#' /usr/local/share/kde-bootc/packages-removed | xargs dnf -y remove
-RUN dnf -y autoremove
-RUN dnf clean all
+RUN dnf -y autoremove && dnf clean all
 
 # CONFIGURATION
 COPY --chmod=0755 ./system/usr__local__bin/* /usr/local/bin/
