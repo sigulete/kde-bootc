@@ -6,16 +6,6 @@
 plasma-discover-offline-updates
 plasma-discover-packagekit
 
-# Gnome object database not required in KDE
-tracker
-tracker-miners
-
-# Exclude mariadb server tools that bring in Perl
-mariadb-server-utils
-
-# Bug reporting tool depending on dnf4 & gtk3
-abrt
-
 # Helper to install package on the command line - Not compatible with bootc
 PackageKit-command-not-found
 
