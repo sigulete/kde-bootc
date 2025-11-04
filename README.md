@@ -325,3 +325,13 @@ sudo dnf reinstall <packages>
 # Remove /usr overlay
 sudo reboot
 ```
+### Wrong `owner` and `group` attributes in `/var`
+If `/etc/passwd` is managed by bootc while building the container image and hasn't been modified locally, the UID and GID allocations in `/etc/passwd` and `/etc/group` will inevitably change at some point.
+
+This is an issue for services that assign `user/group` ownership to files and directories in `/var`. The problem is that these files and directories will remain unchanged, and they won’t match the new UID and GID in `/etc/passwd` and `/etc/group`. As a result, it will cause the relevant services to stop working, so it needs to be addressed as it occurs.
+
+For example, the following instruction will update the ownership for the `pcp` (Performance Co-Pilot) package. This service generates files with the `owner:group` set to `pcp:pcp` under `/var/log/pcp` and `/var/lib/pcp`. When the `pcp` UID changes, their ownership must be updated accordingly.
+```
+sudo find /var/lib/pcp ! -user root ! -user pcp -exec chown pcp:pcp {} + 
+sudo find /var/log/pcp ! -user root ! -user pcp -exec chown pcp:pcp {} +
+```
