@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
   #push:
   schedule:
-  - cron: '30 13 * * FRI'    # Triggers Fri at 13:30
-
+  # minute (0-59) hour (0-23) day of month (1-31) month (1-12) day of week (SUN-SAT) 
+  # Triggers Fri at 13:30
+  - cron: '30 13 * * FRI'
 
 jobs:
-  io-image:
+  kde-bootc:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
