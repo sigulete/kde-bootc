@@ -173,7 +173,7 @@ There is also a placeholder to configure selinux as required.
 ```
 RUN /tmp/scripts/config-selinux
 ```
-Finally, the following scripts will configure systemd and users which is expanded in the the relevant sections.
+Finally, the following scripts will configure systemd and local users which is expanded in the relevant sections.
 ```
 --> Add systemd units
 RUN /tmp/scripts/config-systemd
