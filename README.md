@@ -56,7 +56,7 @@ In some cases, for successful package installation the `/var/roothome` directory
 RUN mkdir /var/roothome
 ```
 ### Prepare packages
-To simplify the installation, and to have a record of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/share`. 
+To simplify the installation, and to have a record of installed and removed packages for future reference, I found useful keeping them as a resource under `/usr/local/share`. 
 - All additional packages to be installed on top of *fedora-bootc* and the *KDE environment* are documented in `packages-added`. 
 - Packages to be removed from *fedora-bootc* and the *KDE environment* are documented in `packages-removed`. 
 - For convenience, the packages included in the base *fedora-bootc* are documented in `packages-fedora-bootc`.
@@ -65,7 +65,7 @@ COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-removed /usr/l
 COPY --chmod=0644 ./system/usr__local__share__kde-bootc__packages-added /usr/local/share/kde-bootc/packages-added
 RUN jq -r .packages[] /usr/share/rpm-ostree/treefile.json > /usr/local/share/kde-bootc/packages-fedora-bootc
 ```
-### Install repositories
+### Install repos
 This section handles adding extra repositories needed before installing packages. 
 
 In this example, I'm adding Tailscale, which is commonly used by the community, but the same principle applies to any other source you may add to your repositories. 
@@ -103,7 +103,34 @@ The criteria used in this project is summarised below:
 - Remove packages that bring unwanted dependencies, such as DNF4 and GTK3.
 - Remove packages that handle deprecated services.
 - Remove packages that are resource-heavy, or bring unnecessary services.
-### Configuration
+### Add systemd units
+The first service completes the configuration during machine boot. These tasks can't be done while building the container as they require systemd to be running.
+```
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__firstboot-setup.service /usr/lib/systemd/system/firstboot-setup.service
+```
+The executable triggered by this service (`system/usr__local__bin/firstboot-setup`) sets the hostname:
+```
+HOST_NAME=kde-bootc
+hostnamectl hostname $HOST_NAME
+```
+And it creates the systemd-homed user `admin`:
+```
+homectl firstboot
+```
+The second service automates updates, replacing the default `bootc-fetch-apply-updates` service, which would download and apply updates as soon as they are available. This approach is problematic because it causes your computer to shut down without warning, so it is better to disable by masking the timer. 
+```
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
+COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
+```
+The replacement `bootc-fetch` service will download the image from the registry and queue it for the next reboot. It is not enabled by default and can be turned on or off by the user as needed.
+
+Finally one of the scripts triggered by the Containerfile (`config-systemd`) will configure systemd enabling services and masking the timer.
+```
+systemctl enable firstboot-setup.service
+systemctl enable bootloader-update.service
+systemctl mask bootc-fetch-apply-updates.timer
+```
+### Add Configuration files
 This section is designated for copying all necessary configuration files to `/usr` and `/etc`. As recommended by the *bootc project*, prioritise using `/usr` and use `/etc` as a fallback if needed.
 
 Bash scripts that will be used by systemd services are stored in `/usr/local/bin`:
@@ -126,9 +153,31 @@ The output must be added to `usr__lib__ostree__auth.json` file, which is copied 
 ```
 COPY --chmod=0600 ./system/usr__lib__ostree__auth.json /usr/lib/ostree/auth.json
 ```
-### Users
-This section is divided into two groups: one copies configuration files, and the other runs scripts to set up the system. 
+The identity file to be used by homed to setup a user is stored in one of the directories where `systemd-homed` expects to find credentials. Further details can be found in the Users section.
+```
+COPY --chmod=0644 ./system/usr__lib__credstore__home.create.admin /usr/lib/credstore/home.create.admin
+```
+### Run Configuration scripts
+This section focused on running scripts to finalise your system configuration. The purpose of some scripts is explained in more detail under the relevant sections.
+```
+RUN /tmp/scripts/config-firewall
+RUN /tmp/scripts/config-selinux
 
+--> Add systemd units
+RUN /tmp/scripts/config-systemd
+
+--> Users
+RUN /tmp/scripts/config-users
+RUN /tmp/scripts/config-authselect
+```
+There is a script to configure firewalld. Since the standard `firewall-cmd` command requires the firewalld daemon, which is not available in the container build, we use `firewall-offline-cmd` instead to complete the configuration. And it sets up the firewall to allow kdeconnect to communicate.
+```
+firewall-offline-cmd --set-default-zone=public
+firewall-offline-cmd --add-service=kdeconnect
+
+```
+And there is a placeholder to configure selinux as required.
+### Users
 I opted for `systemd-homed` users because they are better suited than regular users for immutable desktops, preventing potential drift if `/etc/passwd` is modified locally. Additionally, each user home benefits from LUKS encrypted volume. However, the script includes an option to create regular users as a reference, which is currently commented out.
 
 The process begins when `firstboot-setup` runs, triggered by `firstboot-setup.service` during boot. It executes `homectl firstboot`, which checks if any regular home areas exist. If none are found, it searches for service credentials starting with `home.create.` to create users at boot. 
@@ -156,10 +205,6 @@ This example sets up a homed area using LUKS storage and a BTRF filesystem. I no
 - `memberOf`: The groups the user belongs to. As a power user, it should be part of the `wheel` group. 
 - `hashedPassword`: This is the hashed version of the password stored under secret. Setting up an initial password allows `homectl firstboot` to create the user without prompting. This password should be changed afterwards (`homectl passwd admin`). This hash can be created using `mkpasswd` utility. 
 
-The identity file is stored in one of the directories where `systemd-homed` expects to find credentials.
-```
-COPY --chmod=0644 ./system/usr__lib__credstore__home.create.admin /usr/lib/credstore/home.create.admin
-```
 For more information on user records, visit: https://systemd.io/USER_RECORD/
 
 Another key parameter to set up is the range for `/etc/subuid` and `/etc/subgid` for the `admin` user. This range is necessary for running rootless containers, as each uid inside the container will be mapped to a uid outside the container within this range. When using `systemd-homed`, note that the available uid/gid ranges are predefined by systemd, and some ranges may be unavailable. Therefore, the chosen range in these files must adhere to these limitations.
@@ -170,48 +215,16 @@ The available range is 524288…1879048191. In this example, I chose 1000001 to 
 
 For more information on available ranges, visit: https://systemd.io/UIDS-GIDS/
 
-The `config-users` script sets this up and also creates a temporary password for the root user. As I will explain later, having a root user as an alternative login is important.
-
-The next script will set up `authselect` to enable authenticating the `admin` user on the login page. To achieve this, we need to enable the features `with-systemd-homed` and `with-fingerprint` (if your computer has a fingerprint reader) for the local profile.
+One of the scripts triggered by the Containerfile (`config-users`) sets this up and also creates a temporary password for the root user. As I will explain later, having a root user as an alternative login is important.
 ```
-COPY --chmod=0755 ./scripts/* /tmp/scripts/
-RUN /tmp/scripts/config-users
-RUN /tmp/scripts/config-authselect && rm -r /tmp/scripts
+echo "$USER_NAME:1000001:65536">/etc/subuid
+echo "$USER_NAME:1000001:65536">/etc/subgid
+echo "Temp#SsaP" | passwd root -s
 ```
-### Systemd services
-The first service completes the configuration during machine boot. These tasks can't be done while building the container as they require systemd to be running.
-
-It sets the hostname:
+And finally, another script will set up `authselect` to enable authenticating the `admin` user on the login page. To achieve this, we need to enable the features `with-systemd-homed` and `with-fingerprint` (if your computer has a fingerprint reader) for the local profile.
 ```
-HOST_NAME=kde-bootc
-hostnamectl hostname $HOST_NAME
-```
-It creates the `systemd-homed` user `admin`:
-```
-homectl firstboot
-```
-And it sets up the firewall to allow kdeconnect to communicate:
-```
-firewall-cmd –set-default-zone=public
-firewall-cmd --add-service=kdeconnect –permanent
-```
-The systemd unit will be placed, and enabled by default:
-```
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__firstboot-setup.service /usr/lib/systemd/system/firstboot-setup.service
-RUN systemctl enable firstboot-setup.service
-```
-The second service automates updates, replacing the default `bootc-fetch-apply-updates` service, which would download and apply updates as soon as they are available. This approach is problematic because it causes your computer to shut down without warning, so it is better to disable by masking the timer: 
-```
-RUN systemctl mask bootc-fetch-apply-updates.timer
-```
-The replacement `bootc-fetch` service will download the image from the registry and queue it for the next reboot. It is not enabled by default and can be turned on or off by the user as needed.
-```
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.service /usr/lib/systemd/system/bootc-fetch.service
-COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/lib/systemd/system/bootc-fetch.timer
-```
-The systemd service in charge to update the bootloader is enabled by default. It will be triggered at boot.
-```
-RUN systemctl enable bootloader-update.service
+authselect enable-feature with-systemd-homed
+authselect enable-feature with-fingerprint
 ```
 ### Clean and Checks
 This section focuses on cleaning the container before converting it into an image. The strategy includes using the latest `bootc container lint` option.
