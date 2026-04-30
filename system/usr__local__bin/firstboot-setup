@@ -12,11 +12,3 @@ hostnamectl hostname $HOST_NAME
 ###############################################
 
 homectl firstboot
-
-###############################################
-# Setup FIREWALL
-###############################################
-
-if [ "$(firewall-cmd --get-default-zone)" != "public" ]; then firewall-cmd --set-default-zone=public; fi
-if [ -z "$(firewall-cmd --list-services | grep kdeconnect)" ]; then firewall-cmd --add-service=kdeconnect --permanent; fi
-firewall-cmd --reload

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Enable services
+systemctl enable firstboot-setup.service
+systemctl enable bootloader-update.service
+
+# Mask services
+systemctl mask bootc-fetch-apply-updates.timer

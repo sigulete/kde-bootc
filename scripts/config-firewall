@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Set default zone
+firewall-offline-cmd --set-default-zone=public
+
+# Add services
+firewall-offline-cmd --add-service=kdeconnect
