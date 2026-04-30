@@ -158,11 +158,23 @@ The identity file to be used by homed to setup a user is stored in one of the di
 COPY --chmod=0644 ./system/usr__lib__credstore__home.create.admin /usr/lib/credstore/home.create.admin
 ```
 ### Run Configuration scripts
-This section focused on running scripts to finalise your system configuration. The purpose of some scripts is explained in more detail under the relevant sections.
+This section focused on running scripts to finalise your system configuration. 
+
+The first script will configure firewalld. 
 ```
 RUN /tmp/scripts/config-firewall
+```
+Since the standard `firewall-cmd` command requires the firewalld daemon, which is not available in the container build, we use `firewall-offline-cmd` instead to complete the configuration. And it sets up the firewall to allow kdeconnect to communicate.
+```
+firewall-offline-cmd --set-default-zone=public
+firewall-offline-cmd --add-service=kdeconnect
+```
+There is also a placeholder to configure selinux as required.
+```
 RUN /tmp/scripts/config-selinux
-
+```
+Finally, the following scripts will configure systemd and users which is expanded in the the relevant sections.
+```
 --> Add systemd units
 RUN /tmp/scripts/config-systemd
 
@@ -170,13 +182,6 @@ RUN /tmp/scripts/config-systemd
 RUN /tmp/scripts/config-users
 RUN /tmp/scripts/config-authselect
 ```
-There is a script to configure firewalld. Since the standard `firewall-cmd` command requires the firewalld daemon, which is not available in the container build, we use `firewall-offline-cmd` instead to complete the configuration. And it sets up the firewall to allow kdeconnect to communicate.
-```
-firewall-offline-cmd --set-default-zone=public
-firewall-offline-cmd --add-service=kdeconnect
-
-```
-And there is a placeholder to configure selinux as required.
 ### Users
 I opted for `systemd-homed` users because they are better suited than regular users for immutable desktops, preventing potential drift if `/etc/passwd` is modified locally. Additionally, each user home benefits from LUKS encrypted volume. However, the script includes an option to create regular users as a reference, which is currently commented out.
 
