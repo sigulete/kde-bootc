@@ -12,7 +12,17 @@ jobs:
   kde-bootc:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
+    - name: free disk space (ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
     - name: run podman build
       run: podman build -t kde-bootc --disable-compression=false .
     - name: push image to ghcr.io
