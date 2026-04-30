@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora-bootc:43
+FROM quay.io/fedora/fedora-bootc:44
 MAINTAINER First Last
 
 # SETUP FILESYSTEM

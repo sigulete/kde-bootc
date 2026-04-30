@@ -4,7 +4,6 @@
 
 # LibreOffice
 libreoffice
-libreoffice-help-en
 
 # Utilities
 vim-default-editor
@@ -42,5 +41,4 @@ ptouch-driver
 splix
 
 # System
-kamera
 lm_sensors
