@@ -124,13 +124,7 @@ COPY --chmod=0644 ./systemd/usr__lib__systemd__system__bootc-fetch.timer /usr/li
 ```
 The replacement `bootc-fetch` service will download the image from the registry and queue it for the next reboot. It is not enabled by default and can be turned on or off by the user as needed.
 
-Finally one of the scripts triggered by the Containerfile (`config-systemd`) will configure systemd enabling services and masking the timer.
-```
-systemctl enable firstboot-setup.service
-systemctl enable bootloader-update.service
-systemctl mask bootc-fetch-apply-updates.timer
-```
-### Add Configuration files
+### Add configuration files
 This section is designated for copying all necessary configuration files to `/usr` and `/etc`. As recommended by the *bootc project*, prioritise using `/usr` and use `/etc` as a fallback if needed.
 
 Bash scripts that will be used by systemd services are stored in `/usr/local/bin`:
@@ -157,7 +151,7 @@ The identity file to be used by homed to setup a user is stored in one of the di
 ```
 COPY --chmod=0644 ./system/usr__lib__credstore__home.create.admin /usr/lib/credstore/home.create.admin
 ```
-### Run Configuration scripts
+### Run configuration scripts
 This section focused on running scripts to finalise your system configuration. 
 ```
 COPY --chmod=0755 ./scripts/* /tmp/scripts/
@@ -173,9 +167,13 @@ The first script will configure firewalld. And since the standard `firewall-cmd`
 firewall-offline-cmd --set-default-zone=public
 firewall-offline-cmd --add-service=kdeconnect
 ```
-There is also a placeholder to configure selinux as required.
-
-Finally, the remaining scripts will configure systemd and local users which is expanded in the relevant sections.
+There is also a placeholder to configure selinux as required. And a script to configure systemd enabling services and masking the timer.
+```
+systemctl enable firstboot-setup.service
+systemctl enable bootloader-update.service
+systemctl mask bootc-fetch-apply-updates.timer
+```
+Finally, the remaining scripts will configure local users as explain in the next section.
 ### Users
 I opted for `systemd-homed` users because they are better suited than regular users for immutable desktops, preventing potential drift if `/etc/passwd` is modified locally. Additionally, each user home benefits from LUKS encrypted volume. However, the script includes an option to create regular users as a reference, which is currently commented out.
 
