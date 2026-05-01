@@ -36,9 +36,9 @@ COPY --chmod=0644 ./system/usr__lib__credstore__home.create.admin /usr/lib/creds
 
 # RUN CONFIGURATION SCRIPTS
 COPY --chmod=0755 ./scripts/* /tmp/scripts/
-RUN /tmp/scripts/config-systemd
 RUN /tmp/scripts/config-firewall
 RUN /tmp/scripts/config-selinux
+RUN /tmp/scripts/config-systemd
 RUN /tmp/scripts/config-users
 RUN /tmp/scripts/config-authselect
 RUN rm -r /tmp/scripts
