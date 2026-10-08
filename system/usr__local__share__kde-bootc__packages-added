@@ -39,6 +39,3 @@ dymo-cups-drivers
 printer-driver-brlaser
 ptouch-driver
 splix
-
-# System
-lm_sensors

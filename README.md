@@ -103,6 +103,7 @@ The criteria used in this project is summarised below:
 - Remove packages that bring unwanted dependencies, such as DNF4 and GTK3.
 - Remove packages that handle deprecated services.
 - Remove packages that are resource-heavy, or bring unnecessary services.
+- Remove multimedia GUI apps that need additional codecs that are available and self-contained on Flathub.
 ### Add systemd units
 The first service completes the configuration during machine boot. These tasks can't be done while building the container as they require systemd to be running.
 ```

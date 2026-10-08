@@ -24,3 +24,7 @@ dracut-config-rescue
 
 # Remove DNF4
 dnf-data
+
+# Remove GUI apps needing third party codecs that are available and self-contained on Flathub
+dragon
+elisa-player
